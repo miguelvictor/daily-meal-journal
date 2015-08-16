@@ -24,7 +24,6 @@ $(document).ready(function () {
     	url: '/meals?id='+getURLParameter('id'),
     	dataType:'json',
     	success: function(data,status,jqXHR){
-    		console.log(data);
     			var header = '<div class="input-group">';
                     header+= '<label>Meal Name</label>';
                     header+= '<input type="text" id="mealname" value="'+data.name+'">';
@@ -85,7 +84,7 @@ $(document).on('click','#accept',function() {
 				name: $('#mealname').val(),
 				unit: $('#mealunit').val(),
 			})
-	};s
+	}
 	$.ajax({
 		type:'PUT',
 		url: '/meals',
@@ -112,6 +111,7 @@ $(document).on('click','#accept',function() {
 function getURLParameter(sParam)
 {
     var sPageURL = window.location.search.substring(1);
+    console.log(sPageURL);
     var sURLVariables = sPageURL.split('&');
     for (var i = 0; i < sURLVariables.length; i++) 
     {

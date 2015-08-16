@@ -31,7 +31,7 @@ $(document).ready(function () {
     			header += '<img src="../svg/hard-boiled-eggs.jpg" class="list-item-avatar">';
     			header += '<div class="list-item-text">';
     			header += '<h3>'+meal.name+'</h3>';
-    			header += ' <p> Calories: '+meal.calories+'</p>';
+    			header += ' <p> Calfories: '+meal.calories+'</p>';
     			header +='</div>';
     			header +=' </a>';
 	            container.append(header);             		
