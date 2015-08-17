@@ -25,7 +25,7 @@ $(document).ready(function () {
     	dataType: 'json',
     	success: function(data){
     		$.each(data,function(i,meal){	
-    			var header = '<a class="list-item" href="/user/edit?id='+meal.mealId+'">';
+    			var header = '<a class="list-item" href="/user/add?id='+meal.mealId+'">';
     			header += '<input type="hidden" id ="hide" value="true">';
     			header += '<img src="../svg/hard-boiled-eggs.jpg" class="list-item-avatar">';
     			header += '<div class="list-item-text">';

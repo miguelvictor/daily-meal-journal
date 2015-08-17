@@ -22,7 +22,6 @@ $(document).ready(function () {
     	type:'GET',
     	url: '/journals',
     	success: function(data){
-    		console.log(data);
     		$.each(data,function(i,journal){
     			var total=0;
     			var obj = journal.journals;

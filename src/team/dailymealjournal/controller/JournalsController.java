@@ -57,8 +57,11 @@ public class JournalsController extends Controller {
             if(null != requestScope("id")) {
                 long id = asLong("id");
                 MealJournal mealJournal = mealJournalService.getMealJournal(id);
-                if (null != mealJournal)
-                    json = MealJournalMeta.get().modelToJson(mealJournal);
+                if (null != mealJournal) {
+                    JSONObject mealJournalJson = new JSONObject(MealJournalMeta.get().modelToJson(mealJournal));
+                    populateJournalJsonWithMeals(mealJournalJson);
+                    json = mealJournalJson.toString();
+                }
             }
             else {
                 List<Journal> journalList = journalService.getJournalList();
@@ -81,7 +84,7 @@ public class JournalsController extends Controller {
                     
                     dto.setMealId(journalJson.getLong("mealId"));
                     dto.setQuantity(journalJson.getInt("quantity"));
-                    
+                   
                     if (isPut()) {
                         dto.setMealJournalId(journalJson.getLong("mealJournalId"));
                         dto = mealJournalService.editMealJournal(dto);
