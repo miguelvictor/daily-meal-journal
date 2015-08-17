@@ -7,40 +7,46 @@ describe('Group meals', function () {
         mealService = meals;
     }));
 
-    it('expects meals service to be defined', function () {
-        expect(mealService).toBeTruthy();
-    });
+});
 
-    it('should group meals by date', function () {
-        var meals = [
-            {
-                "name": "Rice",
-                "unit": "cup",
-                "calories": 205,
-                "iconUrl": "meals-icons/rice.jpg",
-                "dateCreated": 1436154582626,
-                "quantity": 1
-            }
-        ];
+describe('Meal Management Screen : Functions', function () {
 
-        var date = new Date(1436154582626);
-        var temp = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime().toString();
+    beforeEach(module('MealManagementApp'));
+
+    describe('Add Meal Information', function () {
+
+        it('should fail if calorie count is invalid', function () {
+
+        });
+
+        it('should pass if the calorie count is valid', function () {
+
+        });
         
-        var expectedGroupedMeals = {};
-        expectedGroupedMeals[temp] = [
-            {
-                "name": "Rice",
-                "unit": "cup",
-                "calories": 205,
-                "iconUrl": "meals-icons/rice.jpg",
-                "dateCreated": 1436154582626,
-                "quantity": 1
-            }
-        ];
-        expectedGroupedMeals[temp].totalCalories = 205;
+        it('should fail if the quantity is not numeric', function () {
 
-        var groupedMeals = mealService.groupMeals(meals);
+        });
 
-        expect(groupedMeals).toEqual(expectedGroupedMeals);
+        it('should pass if the quantity is numeric', function () {
+
+        });
+
+        it('should fail if there is no unit provided', function () {
+
+        });
+
+        it('should pass if there is unit provided', function () {
+
+        });
+
+        it('should fail if meal is alreay added', function () {
+
+        });
+
+        it('should pass if meal is not yet added', function () {
+
+        });
+
     });
+
 });

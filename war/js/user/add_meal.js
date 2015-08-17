@@ -1,7 +1,7 @@
-	/* ------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
- * Copyright (C) Miguelito� - All Rights Reserved 2015
+ * Copyright (C) Miguelito - All Rights Reserved 2015
  * --------------------------------------------------------------------------- */
 
 /**
@@ -9,7 +9,7 @@
  * @author John Decena
  * @version 0.01
  * Version History
- * [08/16/2015] 0.01 �  AJAX implementation to create/add journal meal given a meal journal id.
+ * [08/16/2015] 0.01 -  AJAX implementation to create/add journal meal given a meal journal id.
  */
 
 /*
@@ -24,19 +24,19 @@ $(document).ready(function () {
     	dataType: 'json',
     	success: function(data){
    			var header =  '<div class="input-group">';
-    			header += '<label>Meal Name</label>';
-    			header += '<input type="text" name="meal_name" id="mealName" value="'+data.name+'" disabled>';
-    			header += '</div>';
-    			header += '<div class="input-group">';
-    			header += '<label>Calories per default quantity / unit</label>';
-    			header += '<input type="text" id="mealCalories" value="'+data.calories+' caloriers per 1 serve" name="meal_name" disabled>';
-    			header += '</div>';
-    			header += '<div class="input-group">';
-    			header += '<label>Default Quantity</label>';
-    			header += '<input type="text" name="meal_name" id="mealQuantity" value="'+data.defaultQuantity+'">';
-    			header += '<input type = "hidden" id ="mealId" value="'+data.mealId+'">';
-    			header += '</div>';
-	            container.append(header); 
+			header += '<label>Meal Name</label>';
+			header += '<input type="text" name="meal_name" id="mealName" value="'+data.name+'" disabled>';
+			header += '</div>';
+			header += '<div class="input-group">';
+			header += '<label>Calories per default quantity / unit</label>';
+			header += '<input type="text" id="mealCalories" value="'+data.calories+' caloriers per 1 serve" name="meal_name" disabled>';
+			header += '</div>';
+			header += '<div class="input-group">';
+			header += '<label>Default Quantity</label>';
+			header += '<input type="text" name="meal_name" id="mealQuantity" value="'+data.defaultQuantity+'">';
+			header += '<input type = "hidden" id ="mealId" value="'+data.mealId+'">';
+			header += '</div>';
+            container.append(header); 
     	}
     });	
 });
@@ -86,3 +86,62 @@ function getURLParameter(sParam)
     }
 
 }
+
+/**
+ * +===========================================+
+ * | Temporary code sa pagmigrate to AngularJS |
+ * | Usage: Icomment ang tanan naa sa babaw    |
+ * +===========================================+
+ **/
+(function () {
+	'use strict';
+
+	var app = angular.module('AddMealApp', []);
+
+	app.controller('MainController', ['$scope', function ($scope) {
+		$.ajax({
+			type:'GET',
+			url: '/meals?id=' + Utils.getURLParameter('id'),
+			dataType: 'json',
+			success: function (data) {
+				var header =  '<div class="input-group">';
+				header += '<label>Meal Name</label>';
+				header += '<input type="text" name="meal_name" id="mealName" value="'+data.name+'" disabled>';
+				header += '</div>';
+				header += '<div class="input-group">';
+				header += '<label>Calories per default quantity / unit</label>';
+				header += '<input type="text" id="mealCalories" value="'+data.calories+' caloriers per 1 serve" name="meal_name" disabled>';
+				header += '</div>';
+				header += '<div class="input-group">';
+				header += '<label>Default Quantity</label>';
+				header += '<input type="text" name="meal_name" id="mealQuantity" value="'+data.defaultQuantity+'">';
+				header += '<input type = "hidden" id ="mealId" value="'+data.mealId+'">';
+				header += '</div>';
+			    $scope.formFields = header;
+			}
+		});	
+
+		$scope.deleteMeal = function () {
+			var mealData = {
+				data: JSON.stringify({
+					mealId: $('#mealId').val(),
+					quantity: $('#mealQuantity').val()
+				})
+			};
+			var url = '/journals?id=' + Utils.getURLParameter('id');
+
+			$.post(url, mealData, function (response) {
+				if(data.errorList.length==0) {
+					alert('Success!');
+				} else {
+					var msg = "";
+
+					for (var i = 0; i < data.errorList.length; i++)
+						msg += data.errorList[i] + "\n";
+					
+					alert(msg);
+				}
+			});
+		};
+	}]);
+}());

@@ -3,5 +3,3 @@ $(document).ready(function(){
         $(this).firstChild().css('color', '#3c5eb9');
     });
 });
-
-
