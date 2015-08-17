@@ -42,6 +42,8 @@ public class MealJournalService {
      */
     public MealJournalDto addMealJournal(MealJournalDto input) {
         MealJournal mealJournal = setModelValues(input);
+        mealJournal.setMealJournalId(input.getMealJournalId());
+
         Journal currentJournal = journalService.getCurrentJournal();
         if(null == currentJournal) {
             journalService.addJournal(new JournalDto());
@@ -80,6 +82,7 @@ public class MealJournalService {
      */
     public MealJournalDto editMealJournal(MealJournalDto input) {
         MealJournal mealJournal = setModelValues(input);
+        mealJournal.setMealJournalId(input.getMealJournalId());
 
         if(!this.dao.editMealJournal(mealJournal)) {
             input.setErrorList(new ArrayList<String>());
@@ -101,6 +104,14 @@ public class MealJournalService {
         if(!this.dao.deleteMealJournal(mealJournal)) {
             input.setErrorList(new ArrayList<String>());
             input.getErrorList().add("database error!");
+        }
+
+        Journal currentJournal = journalService.getCurrentJournal();
+        if(null != currentJournal && currentJournal.getMealJournalListRef().getModelList().size() < 1)
+        {
+            JournalDto currentJournalDto = new JournalDto();
+            currentJournalDto.setJournalId(currentJournal.getJournalId());
+            journalService.deleteJournal(currentJournalDto);
         }
 
         return input;

@@ -24,27 +24,26 @@ $(document).ready(function () {
     	url: '/meals?id='+getURLParameter('id'),
     	dataType:'json',
     	success: function(data,status,jqXHR){
-    		console.log(data);
-    			var header = '<div class="input-group">';
-                    header+= '<label>Meal Name</label>';
-                    header+= '<input type="text" id="mealname" value="'+data.name+'">';
-                    header+= '</div>';
-                    header+= '<div class="input-group">';
-                    header+= '<label>Default Quantity</label>';
-                    header+= '<input type="text" id="mealquantity" value="'+data.defaultQuantity+'">';
-                    header+= '</div>';
-                    header+= '<div class="input-group">';
-                    header+= '<label>Unit</label>';
-                    header+= '<input type="text" id="mealunit" value="'+data.unit+'">';
-                    header+= '</div>';
-                    header+= '<div class="input-group">';
-                    header+= '<label>Calorie count</label>';
-                    header+= '<input type="text" id="mealcalories" value="'+data.calories+'">';
-                    header+= '</div>';
-                    header+= '<div class="error-messages">';
-                //	<!-- use jQuery to place error messages in here
-                	header+= '</div>';
-                	container.append(header);
+			var header = '<div class="input-group">';
+            header+= '<label>Meal Name</label>';
+            header+= '<input type="text" id="mealname" value="'+data.name+'">';
+            header+= '</div>';
+            header+= '<div class="input-group">';
+            header+= '<label>Default Quantity</label>';
+            header+= '<input type="text" id="mealquantity" value="'+data.defaultQuantity+'">';
+            header+= '</div>';
+            header+= '<div class="input-group">';
+            header+= '<label>Unit</label>';
+            header+= '<input type="text" id="mealunit" value="'+data.unit+'">';
+            header+= '</div>';
+            header+= '<div class="input-group">';
+            header+= '<label>Calorie count</label>';
+            header+= '<input type="text" id="mealcalories" value="'+data.calories+'">';
+            header+= '</div>';
+            header+= '<div class="error-messages">';
+        	//	<!-- use jQuery to place error messages in here
+        	header+= '</div>';
+        	container.append(header);
     	}
     });	
 });
