@@ -17,6 +17,7 @@ import org.slim3.repackaged.org.json.JSONObject;
 
 import team.dailymealjournal.dto.MealJournalDto;
 import team.dailymealjournal.model.Journal;
+import team.dailymealjournal.model.MealJournal;
 import team.dailymealjournal.model.Meal;
 import team.dailymealjournal.meta.MealJournalMeta;
 import team.dailymealjournal.service.JournalService;
@@ -55,9 +56,9 @@ public class JournalsController extends Controller {
         if (isGet()) {
             if(null != requestScope("id")) {
                 long id = asLong("id");
-                Journal journal = journalService.getJournal(id);
-                if (null != journal)
-                    json = journalToJson(journal).toString();
+                MealJournal mealJournal = mealJournalService.getMealJournal(id);
+                if (null != mealJournal)
+                    json = MealJournalMeta.get().modelToJson(mealJournal);
             }
             else {
                 List<Journal> journalList = journalService.getJournalList();
