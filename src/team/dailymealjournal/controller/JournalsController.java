@@ -90,6 +90,7 @@ public class JournalsController extends Controller {
                         dto = mealJournalService.editMealJournal(dto);
                     } else
                         dto = mealJournalService.addMealJournal(dto);
+                        
                 }
             }
             catch (Exception e) {

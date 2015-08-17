@@ -1,4 +1,4 @@
-/* ------------------------------------------------------------------------------
+	/* ------------------------------------------------------------------------------
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  * Copyright (C) Miguelito™ - All Rights Reserved 2015
@@ -9,7 +9,7 @@
  * @author John Decena
  * @version 0.01
  * Version History
- * [08/16/2015] 0.01 –  AJAX implementation to populate meals at meals.html.
+ * [08/16/2015] 0.01 –  AJAX implementation to create/add journal meal given a meal journal id.
  */
 
 /*
@@ -34,6 +34,7 @@ $(document).ready(function () {
     			header += '<div class="input-group">';
     			header += '<label>Default Quantity</label>';
     			header += '<input type="text" name="meal_name" id="mealQuantity" value="'+data.defaultQuantity+'">';
+    			header += '<input type = "hidden" id ="mealId" value="'+data.mealId+'">';
     			header += '</div>';
 	            container.append(header); 
     	}
@@ -44,9 +45,17 @@ $(document).ready(function () {
  * Script for deleting a meal (given a mealJournalId) -- John Alton Decena
  **/
 $(document).on('click','#check',function() {
+	meal = {
+			data: JSON.stringify({
+				//mealJournalId: getURLParameter('id'),
+				mealId: $('#mealId').val(),
+				quantity: $('#mealQuantity').val(),
+			})
+	}
 	$.ajax({
-		type:'PUT',
+		type:'POST',
 		url: '/journals?id='+getURLParameter('id'),
+		data:meal,
 		success: function(data,status,jqXHR) {
 			if(data.errorList.length==0) {
 				alert('Success!');

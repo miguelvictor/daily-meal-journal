@@ -42,6 +42,7 @@ public class MealJournalService {
      */
     public MealJournalDto addMealJournal(MealJournalDto input) {
         MealJournal mealJournal = setModelValues(input);
+        mealJournal.setMealJournalId(input.getMealJournalId());
         Journal currentJournal = journalService.getCurrentJournal();
         if(null == currentJournal) {
             journalService.addJournal(new JournalDto());
@@ -80,7 +81,7 @@ public class MealJournalService {
      */
     public MealJournalDto editMealJournal(MealJournalDto input) {
         MealJournal mealJournal = setModelValues(input);
-
+        mealJournal.setMealJournalId(input.getMealJournalId());
         if(!this.dao.editMealJournal(mealJournal)) {
             input.setErrorList(new ArrayList<String>());
             input.getErrorList().add("database error!");

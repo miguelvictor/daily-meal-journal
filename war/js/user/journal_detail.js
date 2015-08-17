@@ -10,7 +10,7 @@
  * @version 0.01
  * Version History
  * [08/16/2015] 0.01 – John Alton Decena – Initial codes.
- * [08/17/2015] 0.02 - John Alton Decena - AJAX implementation to to delete meal given a meal journal id.
+ * [08/17/2015] 0.02 - John Alton Decena - AJAX implementation to delete and edit meal given a meal journal id.
  */
 
 

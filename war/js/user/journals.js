@@ -26,7 +26,7 @@ $(document).ready(function () {
     			var total=0;
     			var obj = journal.journals;
     			var header = '<div class="list-header">';
-    			header += '<span class="primary-text">' + journal.dateCreated + '</span>';
+    			header += '<span class="primary-text">' + new Date(journal.dateCreated) + '</span>';
 	            $.each(obj, function(j, data) {	
 	            	total+=parseInt(data.calories);
         		});	
