@@ -11,7 +11,7 @@ import org.slim3.controller.validator.Validators;
 import org.slim3.repackaged.org.json.JSONException;
 import org.slim3.repackaged.org.json.JSONObject;
 
-import team.dailymealjournal.util.Utils;
+import team.dailymealjournal.utils.Utils;
 
 /**
  * Validators that accepts JSONObject instead of a Map or HttpServletRequest.

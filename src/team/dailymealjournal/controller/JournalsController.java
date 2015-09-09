@@ -28,7 +28,7 @@ import team.dailymealjournal.meta.MealJournalMeta;
 import team.dailymealjournal.service.JournalService;
 import team.dailymealjournal.service.MealJournalService;
 import team.dailymealjournal.service.MealService;
-import team.dailymealjournal.util.Utils;
+import team.dailymealjournal.utils.ResponseUtils;
 import team.dailymealjournal.validator.JSONValidators;
 
 /**
@@ -47,9 +47,12 @@ import team.dailymealjournal.validator.JSONValidators;
 public class JournalsController extends Controller {
     
     public static final String JOURNAL_NOT_FOUND = "MealJournal not found";
+    public static final String JOURNAL_QUOTA_REACHED = "MealJournal quota reached";
     public static final String JOURNAL_ID_WRONG_TYPE = "MealJournal ID must be a whole number";
     public static final String REQUEST_NOT_JSON = "Request body must be JSON";
     public static final String JOURNAL_ID_MISSING = "MealJournal ID is missing";
+    
+    public static final int JOURNAL_QUOTA_PER_DAY = 10;
     
     /**
      * The JournalService to use.
@@ -102,7 +105,7 @@ public class JournalsController extends Controller {
                 if (null != mealJournal) {
                     JSONObject mealJournalJson = new JSONObject(MealJournalMeta.get().modelToJson(mealJournal));
                     populateJournalJsonWithMeals(mealJournalJson);
-                    Utils.writeJsonResponse(response, mealJournalJson);
+                    ResponseUtils.writeJsonResponse(response, mealJournalJson);
                 } else { // journal not found
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, JOURNAL_NOT_FOUND);
                 }
@@ -112,7 +115,7 @@ public class JournalsController extends Controller {
         } else { // get all journals
             List<Journal> journalsList = journalService.getJournalList();
             JSONArray journalsArray = journalsToJson(journalsList);
-            Utils.writeJsonResponse(response, journalsArray);
+            ResponseUtils.writeJsonResponse(response, journalsArray);
         }
     }
     
@@ -121,24 +124,31 @@ public class JournalsController extends Controller {
      * @return String - resulting JSON string.
      */
     private void performPost() throws IOException {
-        try {
-            JSONObject postData = new JSONObject(request.getReader().readLine());
-            JSONValidators validator = new JSONValidators(postData);
-            
-            validator.add("mealId", validator.required(), validator.longType());
-            validator.add("quantity", validator.required(), validator.integerType());
-            
-            if (validator.validate()) {
-                dto.setMealId(postData.getLong("mealId"));
-                dto.setQuantity(postData.getInt("quantity"));
-                dto = mealJournalService.addMealJournal(dto);
-            } else {
-                List<String> errorList = new ArrayList<String>();
-                validator.addErrorsTo(errorList);
-                Utils.writeErrors(response, errorList, "Input Validation Error");
+        if (mealJournalService.getTodaysJournalCount() < JOURNAL_QUOTA_PER_DAY) { // check if today's quota has been reached
+            try {
+                JSONObject postData = new JSONObject(request.getReader().readLine());
+                JSONValidators validator = new JSONValidators(postData);
+                
+                validator.add("mealId", validator.required(), validator.longType());
+                validator.add("quantity", validator.required(), validator.integerType());
+                
+                if (validator.validate()) {
+                    dto.setMealId(postData.getLong("mealId"));
+                    dto.setQuantity(postData.getInt("quantity"));
+                    dto = mealJournalService.addMealJournal(dto);
+                    
+                    ResponseUtils.handleDto(response, dto);
+                } else {
+                    List<String> errorList = new ArrayList<String>();
+                    validator.addErrorsTo(errorList);
+                    ResponseUtils.writeErrors(response, errorList, "Input Validation Error");
+                }
+            } catch (JSONException e) { // we can't understand the request's request body, bad request
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, REQUEST_NOT_JSON);
             }
-        } catch (JSONException e) { // we can't understand the request's request body, bad request
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, REQUEST_NOT_JSON);
+        } else { // quota reached, bad request
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, JOURNAL_QUOTA_REACHED);
+            response.getWriter().write("Today's limit has been reached. You can't add journals anymore. Sorry!");
         }
     }
     
@@ -160,10 +170,12 @@ public class JournalsController extends Controller {
                 dto.setQuantity(postData.getInt("quantity"));
                 dto.setMealJournalId(postData.getLong("mealJournalId"));
                 dto = mealJournalService.editMealJournal(dto);
+                
+                ResponseUtils.handleDto(response, dto);
             } else {
                 List<String> errorList = new ArrayList<String>();
                 validator.addErrorsTo(errorList);
-                Utils.writeErrors(response, errorList, "Input Validation Error");
+                ResponseUtils.writeErrors(response, errorList, "Input Validation Error");
             }
         } catch (JSONException e) { // we can't understand the request's request body, bad request
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, REQUEST_NOT_JSON);
@@ -183,8 +195,10 @@ public class JournalsController extends Controller {
                 MealJournal mealJournal = mealJournalService.getMealJournal(mealJournalId);
                 
                 if (null != mealJournal) {
-                    dto.setMealId(mealJournalId);
+                    dto.setMealJournalId(mealJournalId);
                     dto = mealJournalService.deleteMealJournal(dto);
+                    
+                    ResponseUtils.handleDto(response, dto);
                 } else { // journal not found
                     response.sendError(HttpServletResponse.SC_NOT_FOUND, JOURNAL_NOT_FOUND);
                 }

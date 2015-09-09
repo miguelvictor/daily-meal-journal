@@ -21,7 +21,7 @@ import team.dailymealjournal.dto.MealDto;
 import team.dailymealjournal.meta.MealMeta;
 import team.dailymealjournal.model.Meal;
 import team.dailymealjournal.service.MealService;
-import team.dailymealjournal.util.Utils;
+import team.dailymealjournal.utils.ResponseUtils;
 import team.dailymealjournal.validator.JSONValidators;
 
 /**
@@ -93,7 +93,7 @@ public class MealsController extends Controller {
                 Meal meal = service.getMeal(mealId);
                 if (null != meal) {
                     JSONObject mealJson = new JSONObject(meta.modelToJson(meal));
-                    Utils.writeJsonResponse(response, mealJson);
+                    ResponseUtils.writeJsonResponse(response, mealJson);
                 } else { // meal not found
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 }
@@ -103,7 +103,7 @@ public class MealsController extends Controller {
         } else { // get all meals
             List<Meal> mealsList = service.getMealList();
             JSONArray mealsArray = new JSONArray(meta.modelsToJson(mealsList));
-            Utils.writeJsonResponse(response, mealsArray);
+            ResponseUtils.writeJsonResponse(response, mealsArray);
         }
     }
     
@@ -130,7 +130,7 @@ public class MealsController extends Controller {
             } else {
                 List<String> errorList = new ArrayList<String>();
                 validator.addErrorsTo(errorList);
-                Utils.writeErrors(response, errorList, "Input Validation Error");
+                ResponseUtils.writeErrors(response, errorList, "Input Validation Error");
             }
         } catch (JSONException e) { // we can't understand the request's request body, bad request
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, REQUEST_NOT_JSON);
@@ -162,7 +162,7 @@ public class MealsController extends Controller {
             } else {
                 List<String> errorList = new ArrayList<String>();
                 validator.addErrorsTo(errorList);
-                Utils.writeErrors(response, errorList, "Input Validation Error");
+                ResponseUtils.writeErrors(response, errorList, "Input Validation Error");
             }
         } catch (JSONException e) { // we can't understand the request's request body, bad request
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, REQUEST_NOT_JSON);

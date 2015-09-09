@@ -16,7 +16,7 @@ import java.util.List;
  * [07/27/2015] 0.01 – Kim Agustin – Initial codes.
  * [08/31/2015] 0.02 – Kim Agustin – Changed calories from int to double.
  */
-public class MealDto {
+public class MealDto implements BaseDto {
 
     /**
      * List of errors.

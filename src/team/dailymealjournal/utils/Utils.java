@@ -1,13 +1,12 @@
-package team.dailymealjournal.util;
+package team.dailymealjournal.utils;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletResponse;
 
 import org.slim3.repackaged.org.json.JSONArray;
 import org.slim3.repackaged.org.json.JSONException;
@@ -84,6 +83,11 @@ public class Utils {
         return list;
     }
     
+    /**
+     * Converts the given list of Strings to JSONArray
+     * @param list the list to be converted
+     * @return the converted list
+     */
     public static JSONArray listToJson(List<String> list) {
         JSONArray array = new JSONArray();
         
@@ -93,35 +97,42 @@ public class Utils {
         
         return array;
     }
-
+    
     /**
-     * Shortcut method to write a JSONObject as the response of content type 'application/json'
-     * @param response the response object where this JSONObject will be written to
-     * @param object the JSONObject that will be written
+     * Returns a Date object that doesn't contain time information
+     * @return the date today
      */
-    public static void writeJsonResponse(HttpServletResponse response, JSONObject object) throws IOException {
-        response.setContentType("application/json");
-        response.getWriter().write(object.toString());
+    public static Date getCurrentDate () {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.AM_PM, Calendar.AM);
+        calendar.set(Calendar.HOUR, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTime();
     }
     
     /**
-     * Shortcut method to write a JSONArray as the response of content type 'application/json'
-     * @param response the response object where this JSONArray will be written to
-     * @param object the JSONArray that will be written
+     * Concatenates every element with a delimiter
      */
-    public static void writeJsonResponse(HttpServletResponse response, JSONArray array) throws IOException {
-        response.setContentType("application/json");
-        response.getWriter().write(array.toString());
-    }
-
-    public static void writeErrors(HttpServletResponse response, List<String> errorList, String title) throws IOException, JSONException {
-        JSONObject r = new JSONObject();
-        JSONArray errors = listToJson(errorList);
-        r.put("errors", errors);
+    public static String join (String delimiter, Iterable<String> tokens) {
+        if (null == tokens) {
+            return null;
+        }
         
-        response.sendError(HttpServletResponse.SC_BAD_REQUEST, title);
-        response.setContentType("application/json");
-        response.getWriter().write(r.toString());
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+        
+        for (String token : tokens) {
+            if (first) {
+                result.append(token);
+                first = false;
+            } else {
+                result.append(delimiter).append(token);
+            }
+        }
+        
+        return result.toString();
     }
 
 }

@@ -26,7 +26,7 @@ public class MealService {
      * The MealService to use.
      * Holds the method for transacting with the datastore.
      */
-    MealDao dao = new MealDao();
+    MealDao dao = MealDao.getInstance();
 
     /**
      * Method used to add a meal.
@@ -36,7 +36,7 @@ public class MealService {
     public MealDto addMeal(MealDto input) {
         Meal meal = setModelValues(input);
 
-        if(!this.dao.addMeal(meal)) {
+        if(!this.dao.add(meal)) {
             input.getErrorList().add("An unexpected error occured!");
         }
 
@@ -48,7 +48,7 @@ public class MealService {
      * @return List<Meal> - list of meals.
      */
     public List<Meal> getMealList() {
-        return this.dao.getAllMeals();
+        return this.dao.getAll();
     }
     
     /**
@@ -57,7 +57,7 @@ public class MealService {
      * @return Meal.
      */
     public Meal getMeal(long mealId) {
-        return this.dao.getMeal(mealId);
+        return this.dao.get(mealId);
     }
 
     /**
@@ -69,7 +69,7 @@ public class MealService {
         Meal meal = setModelValues(input);
         meal.setMealId(input.getMealId());
 
-        if(!this.dao.editMeal(meal)) {
+        if(!this.dao.update(meal)) {
             input.getErrorList().add("An unexpected error occured!");
         }
 
@@ -85,7 +85,7 @@ public class MealService {
         Meal meal = new Meal();
         meal.setMealId(input.getMealId());
 
-        if(!this.dao.deleteMeal(meal)) {
+        if(!this.dao.delete(meal)) {
             input.getErrorList().add("An unexpected error occured!");
         }
 

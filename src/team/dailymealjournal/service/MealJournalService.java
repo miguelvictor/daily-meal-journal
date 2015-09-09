@@ -30,7 +30,7 @@ public class MealJournalService {
      * The MealJournalService to use.
      * Holds the method for transacting with the datastore.
      */
-    MealJournalDao dao = new MealJournalDao();
+    MealJournalDao dao = MealJournalDao.getInstance();
     
     /**
      * The JournalService to use.
@@ -47,7 +47,7 @@ public class MealJournalService {
         MealJournal mealJournal = setModelValues(input);
         Journal currentJournal = journalService.getCurrentJournal();
 
-        if(!this.dao.addMealJournal(currentJournal, mealJournal)) {
+        if(!this.dao.add(currentJournal, mealJournal)) {
             input.getErrorList().add("An unexpected error occured!");
         }
 
@@ -59,7 +59,7 @@ public class MealJournalService {
      * @return List<MealJournal> - list of mealJournals.
      */
     public List<MealJournal> getMealJournalList() {
-        return this.dao.getAllMealJournals();
+        return this.dao.getAll();
     }
     
     /**
@@ -68,7 +68,7 @@ public class MealJournalService {
      * @return MealJournal.
      */
     public MealJournal getMealJournal(long mealJournalId) {
-        return this.dao.getMealJournal(mealJournalId);
+        return this.dao.get(mealJournalId);
     }
 
     /**
@@ -80,7 +80,7 @@ public class MealJournalService {
         MealJournal mealJournal = setModelValues(input);
         mealJournal.setMealJournalId(input.getMealJournalId());
 
-        if(!this.dao.editMealJournal(mealJournal)) {
+        if(!this.dao.update(mealJournal)) {
             input.getErrorList().add("An unexpected error occured!");
         }
 
@@ -96,7 +96,7 @@ public class MealJournalService {
         MealJournal mealJournal = new MealJournal();
         mealJournal.setMealJournalId(input.getMealJournalId());
         
-        if(!this.dao.deleteMealJournal(mealJournal)) {
+        if(!this.dao.delete(mealJournal)) {
             input.getErrorList().add("An unexpected error occured!");
         }
         
@@ -113,6 +113,10 @@ public class MealJournalService {
         mealJournal.setMealId(input.getMealId());
         mealJournal.setQuantity(input.getQuantity());
         return mealJournal;
+    }
+    
+    public int getTodaysJournalCount () {
+        return dao.getTodaysJournalCount(journalService.getCurrentJournal());
     }
 
 }

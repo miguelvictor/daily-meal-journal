@@ -17,7 +17,7 @@ import java.util.List;
  * Version History
  * [07/27/2015] 0.01 – Kim Agustin – Initial codes.
  */
-public class JournalDto {
+public class JournalDto implements BaseDto {
 
     /**
      * List of errors.

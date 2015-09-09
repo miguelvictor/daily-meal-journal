@@ -119,7 +119,7 @@
                         Utils.showAlert($mdDialog, ev, Strings.JOURNALS_CALORIES_GREATER_THAN_200_TITLE, Strings.JOURNALS_CALORIES_GREATER_THAN_200_DESCRIPTION);
                     } else {
                         var journalData = {
-                            quantity : $scope.quantity,
+                            quantity : "" + $scope.quantity, // useful kung di ichange ang default quantity nga sa int ang type
                             mealId : $routeParams.mealId
                         };
 
@@ -209,6 +209,7 @@
                     $http.delete(Urls.Journals + '?id=' + journalId)
                         .then(function () {
                             Utils.showToast($mdToast, Strings.JOURNALS_JOURNAL_DELETED);
+                            Utils.appRedirectTo(Urls.Journals);
                         }, function(response) {
                             if (response.status >= 400 && response.status < 500) {
                                 Utils.showAlert($mdDialog, ev, response.statusText, response.data);
@@ -216,7 +217,6 @@
                                 Utils.showAlert($mdDialog, ev, Strings.ERROR_500_TITLE, Strings.ERROR_500_DESCRIPTION);
                             }
                         });
-                    Utils.appRedirectTo(Urls.Journals);
                 }, function () {
                     // user pressed cancel, do nothing
                 });

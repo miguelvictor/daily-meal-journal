@@ -13,6 +13,7 @@ import org.slim3.datastore.FilterCriterion;
 import team.dailymealjournal.meta.MealMeta;
 import team.dailymealjournal.model.Meal;
 
+import com.google.appengine.api.datastore.DatastoreFailureException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.Transaction;
 
@@ -23,102 +24,123 @@ import com.google.appengine.api.datastore.Transaction;
 * Version History
 * [07/27/2015] 0.01 – Kim Agustin – Initial codes.
 * [09/08/2015] 0.02 – Kim Agustin – Moved key initializations outside transaction.
+* [09/09/2015] 0.03 - Miguel Victor Remulta - Refactor
 */
 public class MealDao {
 
     /**
-     * Method used to save a meal.
-     * @param MealModel - Meal to be saved.
-     * @return Boolean - true, if meal is saved; otherwise, false.
+     * The sole instance
      */
-    public boolean addMeal(Meal mealModel) {
+    private static MealDao SOLE_INSTANCE = new MealDao();
+    
+    private MealDao () {}
+    
+    /**
+     * Persists a meal to the Datastore
+     * @param meal the meal to be added
+     * @return true if the transaction was successful, false otherwise
+     */
+    public boolean add(Meal meal) {
         boolean result = true;
+        
         try {
-            // Manually allocate key
-            Key key = Datastore.allocateId("Meal");
-            mealModel.setMealId(key.getId());
+            Key key = Datastore.allocateId(Meal.class);
+            meal.setMealId(key.getId());
             
             Transaction tx = Datastore.beginTransaction();
-            Datastore.put(mealModel);
+            Datastore.put(meal);
             tx.commit();
-        } catch (Exception e) {
+        } catch (DatastoreFailureException e) {
             result = false;
         }
+        
         return result;
     }
 
     /**
-     * Method used to retrieve list of Meals.
-     * @return List<Meal> - list of Meals.
+     * Returns all meals
+     * @return the list of meals
      */
-    public List<Meal> getAllMeals() {
-        MealMeta meta = new MealMeta();
+    public List<Meal> getAll() {
+        MealMeta meta = MealMeta.get();
         return Datastore.query(meta).asList();
     }
     
     /**
-     * Method used to retrieve a Meal using its ID.
-     * @param long mealId
-     * @return Meal.
+     * Returns a meal with the given mealId
+     * @param mealId the id of the meal
+     * @return the meal
      */
-    public Meal getMeal(long mealId) {
-        MealMeta meta = new MealMeta();
-        FilterCriterion mainFilter = meta.mealId.equal(mealId);
-        return Datastore.query(meta).filter(mainFilter).asSingle();
+    public Meal get(long mealId) {
+        MealMeta meta = MealMeta.get();
+        FilterCriterion filter = meta.mealId.equal(mealId);
+        return Datastore.query(meta).filter(filter).asSingle();
     }
 
     /**
-     * Method used to edit a meal.
-     * @param MealModel - Meal to save.
-     * @return Boolean - true, if meal is saved; otherwise, false.
+     * Updates a meal
+     * @param meal the meal to update
+     * @return true if the transaction was successful, false otherwise
      */
-    public boolean editMeal(Meal mealModel) {
+    public boolean update(Meal meal) {
         boolean result = true;
-        MealMeta meta = new MealMeta();
-        FilterCriterion mainFilter = meta.mealId.equal(mealModel.getMealId());
+        MealMeta meta = MealMeta.get();
+        FilterCriterion filter = meta.mealId.equal(meal.getMealId());
 
         try {
-            Meal originalMealModel = Datastore.query(meta).filter(mainFilter).asSingle();
-            if (originalMealModel != null) {
-                originalMealModel.setName(mealModel.getName());
-                originalMealModel.setUnit(mealModel.getUnit());
-                originalMealModel.setCalories(mealModel.getCalories());
-                originalMealModel.setDefaultQuantity(mealModel.getDefaultQuantity());
+            Meal persistedMeal = Datastore.query(meta).filter(filter).asSingle();
+            
+            if (persistedMeal != null) {
+                persistedMeal.setName(meal.getName());
+                persistedMeal.setUnit(meal.getUnit());
+                persistedMeal.setCalories(meal.getCalories());
+                persistedMeal.setDefaultQuantity(meal.getDefaultQuantity());
                 
                 Transaction tx = Datastore.beginTransaction();
-                Datastore.put(originalMealModel);
+                Datastore.put(persistedMeal);
                 tx.commit();
             } else {
                 result = false;
             }
-        } catch (Exception e) {
+        } catch (DatastoreFailureException e) {
             result = false;
         }
+        
         return result;
     }
 
     /**
-     * Method used to delete a meal.
-     * @param MealModel - meal to delete.
-     * @return Boolean - true, if meal is deleted; otherwise, false.
+     * Deletes a meal
+     * @param meal the meal to be deleted
+     * @return true if the transaction was successful, false otherwise
      */
-    public boolean deleteMeal(Meal mealModel) {
+    public boolean delete(Meal meal) {
         boolean result = true;
-        MealMeta meta = new MealMeta();
-        FilterCriterion mainFilter = meta.mealId.equal(mealModel.getMealId());
+        MealMeta meta = MealMeta.get();
+        FilterCriterion filter = meta.mealId.equal(meal.getMealId());
 
         try {
-            Meal originalMealModel = Datastore.query(meta).filter(mainFilter).asSingle();
-            if (originalMealModel != null) {
+            Meal persistedMeal = Datastore.query(meta).filter(filter).asSingle();
+            
+            if (persistedMeal != null) {
                 Transaction tx = Datastore.beginTransaction();
-                Datastore.delete(originalMealModel.getKey());
+                Datastore.delete(persistedMeal.getKey());
                 tx.commit();
             } else {
                 result = false;
             }
-        } catch (Exception e) {
+        } catch (DatastoreFailureException e) {
             result = false;
         }
+        
         return result;
+    }
+    
+    /**
+     * Returns the sole singleton instance
+     * @return the sole singleton instance
+     */
+    public static MealDao getInstance () {
+        return SOLE_INSTANCE;
     }
 }
