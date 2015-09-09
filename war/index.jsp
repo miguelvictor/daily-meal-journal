@@ -2,7 +2,7 @@
 
 <head>
     <link rel="stylesheet" href="node_modules/angular-material/angular-material.min.css">
-    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic">
+    <!-- <link rel="stylesheet" href="//fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic"> -->
     <link rel="stylesheet" href="css/index.css">
 </head>
 

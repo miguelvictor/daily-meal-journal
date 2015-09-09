@@ -28,13 +28,14 @@ import team.dailymealjournal.validator.JSONValidators;
 /**
  * Service used to handle journal & meal journal transactions.
  * @author Kim Agustin
- * @version 0.05
+ * @version 0.06
  * Version History
  * [07/28/2015] 0.01 – Kim Agustin – Initial codes.
  * [08/07/2015] 0.02 – Kim Agustin – Refactored controller to handle meal journal transactions (GET)
  * [08/08/2015] 0.03 – Kim Agustin – Added POST, PUT, DELETE methods
  * [08/17/2015] 0.04 – Kim Agustin – Fixed GET by meal journal ID
  * [09/01/2015] 0.05 – Kim Agustin – Restructured controller flow.
+ * [09/08/2015] 0.06 – Kim Agustin – Changed received request into JSON.
  */
 public class JournalsController extends Controller {
     
@@ -59,24 +60,27 @@ public class JournalsController extends Controller {
 
     @Override
     public Navigation run() throws Exception {
-String json = "";
+        String json;
         
-        if (isGet()) {
-            json = performGet();
-        } else if (isDelete()) {
-            json = performDelete();
-        } else if (isPost()) {
+        String requestMethod = request.getMethod();
+        if ("post".equalsIgnoreCase(requestMethod)) {
             json = performPost();
-        } else if (isPut()) {
+        } else if ("put".equalsIgnoreCase(requestMethod)) {
             json = performPut();
+        } else if ("delete".equalsIgnoreCase(requestMethod)) {
+            json = performDelete();
+        } else {
+            json = performGet();
         }
         
         if (dto.getErrorList().size() > 0) {
             // if errors are found, replace whole JSON string to errorList
             json = new JSONObject().put("errorList", dto.getErrorList()).toString();
         }
+        
         response.setContentType("application/json");
         response.getWriter().write(json);
+        
         return null;
     }
     
@@ -89,10 +93,17 @@ String json = "";
         JSONValidators validators = new JSONValidators(this.request);
         
         try {
-            if(null != requestScope("id")) {
+            String mealJournalId = requestScope("id");
+            
+            if(null == mealJournalId) {
+                List<Journal> journalList = journalService.getJournalList();
+                if (null != journalList) {
+                    json = journalsToJson(journalList).toString();
+                }
+            } else {
                 validators.add("id", validators.longType());
                 if (validators.validate()) {
-                    long id = asLong("id");
+                    long id = Long.valueOf(mealJournalId);
                     MealJournal mealJournal = mealJournalService.getMealJournal(id);
                     if (null != mealJournal) {
                         JSONObject mealJournalJson = new JSONObject(MealJournalMeta.get().modelToJson(mealJournal));
@@ -101,11 +112,6 @@ String json = "";
                     }
                 } else {
                     validators.addErrorsTo(dto.getErrorList());
-                }
-            } else {
-                List<Journal> journalList = journalService.getJournalList();
-                if (null != journalList) {
-                    json = journalsToJson(journalList).toString();
                 }
             }
         } catch (Exception e) {
@@ -124,9 +130,9 @@ String json = "";
         JSONValidators validators = new JSONValidators(this.request);
         
         try {
-            validators.add("mealJournalId", validators.required(), validators.longType());
+            validators.add("id", validators.required(), validators.longType());
             if (validators.validate()) {
-                dto.setMealJournalId(this.asLong("mealJournalId"));
+                dto.setMealJournalId(this.asLong("id"));
                 dto = mealJournalService.deleteMealJournal(dto);
             }
         } catch (Exception e) {
@@ -144,12 +150,12 @@ String json = "";
     private String performPost() {
         String json = "";
         JSONObject journalJson = null;
-        JSONValidators validators = new JSONValidators(this.request);
+        JSONValidators validators;// = new JSONValidators(this.request);
         
         try {
-            validators.add("data", validators.required("Request must be done with post data."));
-            if (validators.validate()) {
-                journalJson = new JSONObject((String) this.requestScope("data"));
+            //validators.add("data", validators.required("Request must be done with post data."));
+            //if (validators.validate()) {
+                journalJson = new JSONObject(this.request.getReader().readLine());
                 
                 validators = new JSONValidators(journalJson);
                 validators.add("mealId", validators.required());
@@ -160,12 +166,12 @@ String json = "";
                     dto.setQuantity(journalJson.getInt("quantity"));
                     dto = mealJournalService.addMealJournal(dto);
                 }
-            }
+            //}
+                validators.addErrorsTo(dto.getErrorList());
         } catch (Exception e) {
             dto.getErrorList().add("An unexpected error occured!");
         }
         
-        validators.addErrorsTo(dto.getErrorList());
         return json;
     }
     
@@ -175,13 +181,13 @@ String json = "";
      */
     private String performPut() {
         String json = "";
-        JSONObject journalJson = null;
-        JSONValidators validators = new JSONValidators(this.request);
+        JSONObject journalJson;
+        JSONValidators validators;
         
         try {
-            validators.add("data", validators.required("Request must be done with post data."));
-            if (validators.validate()) {
-                journalJson = new JSONObject((String) this.requestScope("data"));
+            //validators.add("data", validators.required("Request must be done with post data."));
+            //if (validators.validate()) {
+                journalJson = new JSONObject(this.request.getReader().readLine());
                 
                 validators = new JSONValidators(journalJson);
                 validators.add("mealId", validators.required());
@@ -194,12 +200,12 @@ String json = "";
                     dto.setMealJournalId(journalJson.getLong("mealJournalId"));
                     dto = mealJournalService.editMealJournal(dto);
                 }
-            }
+            //}
+                validators.addErrorsTo(dto.getErrorList());
         } catch (Exception e) {
             dto.getErrorList().add("An unexpected error occured!");
         }
         
-        validators.addErrorsTo(dto.getErrorList());
         return json;
     }
     

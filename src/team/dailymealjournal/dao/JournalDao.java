@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.slim3.datastore.Datastore;
 import org.slim3.datastore.FilterCriterion;
-import org.slim3.memcache.Memcache;
 
 import team.dailymealjournal.meta.JournalMeta;
 import team.dailymealjournal.model.Journal;
@@ -24,7 +23,7 @@ import com.google.appengine.api.datastore.Transaction;
 * @version 0.02
 * Version History
 * [07/27/2015] 0.01 – Kim Agustin – Initial codes.
-* [09/06/2015] 0.02 – Kim Agustin – Added memcache support.
+* [09/08/2015] 0.02 – Kim Agustin – Moved key initializations outside transaction.
 */
 public class JournalDao {
 
@@ -43,9 +42,6 @@ public class JournalDao {
             Transaction tx = Datastore.beginTransaction();
             Datastore.put(journalModel);
             tx.commit();
-            
-            // delete cache
-            Memcache.delete("journals");
         } catch (Exception e) {
             e.printStackTrace();
             result = false;
@@ -57,15 +53,9 @@ public class JournalDao {
      * Method used to retrieve list of Journals.
      * @return List<Journal> - list of Journals.
      */
-    @SuppressWarnings("unchecked")
     public List<Journal> getAllJournals() {
-        List<Journal> journals = (List<Journal>) Memcache.get("journals");
-        if (null == journals) {
-            JournalMeta meta = new JournalMeta();
-            journals = Datastore.query(meta).asList();
-            Memcache.put("journals", journals);
-        }
-        return journals;
+        JournalMeta meta = new JournalMeta();
+        return Datastore.query(meta).asList();
     }
     
     /**
@@ -80,7 +70,7 @@ public class JournalDao {
     }
     
     /**
-     * Method used to retrieve a Journal using a date.
+     * Method used to retrieve a Journal using its ID.
      * @param Date dateCreated
      * @return Journal.
      */
@@ -105,13 +95,9 @@ public class JournalDao {
             if (originalJournalModel != null) {
                 originalJournalModel.setDateCreated(journalModel.getDateCreated());
                 
-                // start transaction
                 Transaction tx = Datastore.beginTransaction();
                 Datastore.put(originalJournalModel);
                 tx.commit();
-                
-                // delete cache
-                Memcache.delete("journals");
             } else {
                 result = false;
             }
@@ -134,13 +120,9 @@ public class JournalDao {
         try {
             Journal originalJournalModel = Datastore.query(meta).filter(mainFilter).asSingle();
             if (originalJournalModel != null) {
-                // start transaction
                 Transaction tx = Datastore.beginTransaction();
                 Datastore.delete(originalJournalModel.getKey());
                 tx.commit();
-                
-                // delete cache
-                Memcache.delete("journals");
             } else {
                 result = false;
             }

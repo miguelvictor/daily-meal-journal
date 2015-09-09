@@ -26,6 +26,7 @@
     background: none;
     color: #fff;
     outline: none;
+    margin-left: 50px;
 }
 
 .padding-big {
@@ -51,4 +52,8 @@
 
 .md-button.md-fab.md-fab-bottom-right {
       position: fixed; 
+}
+
+.progress-bar {
+    margin: -5px 0 10px;
 }

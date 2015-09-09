@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.slim3.datastore.Datastore;
 import org.slim3.datastore.FilterCriterion;
-import org.slim3.memcache.Memcache;
 
 import team.dailymealjournal.meta.MealJournalMeta;
 import team.dailymealjournal.model.Journal;
@@ -27,7 +26,7 @@ import com.google.appengine.api.datastore.Transaction;
 * [07/28/2015] 0.01 – Kim Agustin – Initial codes.
 * [08/30/2015] 0.02 – Kim Agustin – Updated addMealJournal algorithm.
 * [08/30/2015] 0.03 – Kim Agustin – Changed deleteMealJournal into cascading.
-* [09/06/2015] 0.04 – Kim Agustin – Added memcache support.
+* [09/08/2015] 0.04 – Kim Agustin – Moved key initializations outside transaction.
 */
 public class MealJournalDao {
 
@@ -55,13 +54,9 @@ public class MealJournalDao {
             mealJournalModel.setMealJournalId(key.getId());
             mealJournalModel.getJournalRef().setModel(journalModel);
             
-            // start transaction
             Transaction tx = Datastore.beginTransaction();
             Datastore.put(journalModel, mealJournalModel);
             tx.commit();
-
-            // delete cache
-            Memcache.delete("mealJournals");
         } catch (Exception e) {
             result = false;
         }
@@ -72,15 +67,9 @@ public class MealJournalDao {
      * Method used to retrieve list of MealJournals.
      * @return List<MealJournal> - list of MealJournals.
      */
-    @SuppressWarnings("unchecked")
     public List<MealJournal> getAllMealJournals() {
-        List<MealJournal> mealJournals = (List<MealJournal>) Memcache.get("mealJournals");
-        if (null == mealJournals) {
-            MealJournalMeta meta = new MealJournalMeta();
-            mealJournals = Datastore.query(meta).asList();
-            Memcache.put("mealJournals", mealJournals);
-        }
-        return mealJournals;
+        MealJournalMeta meta = new MealJournalMeta();
+        return Datastore.query(meta).asList();
     }
     
     /**
@@ -110,13 +99,9 @@ public class MealJournalDao {
                 originalMealJournalModel.setMealId(mealJournalModel.getMealId());
                 originalMealJournalModel.setQuantity(mealJournalModel.getQuantity());
                 
-                // start transaction
                 Transaction tx = Datastore.beginTransaction();
                 Datastore.put(originalMealJournalModel);
                 tx.commit();
-                
-                // delete cache
-                Memcache.delete("mealJournals");
             } else {
                 result = false;
             }
@@ -147,16 +132,12 @@ public class MealJournalDao {
                     deleteAll = false;
                 }
                 
-                // start transaction
                 Transaction tx = Datastore.beginTransaction();
                 if (deleteAll)
                     Datastore.deleteAll(originalMealJournalModel.getKey().getParent());
                 else
                     Datastore.delete(originalMealJournalModel.getKey());
                 tx.commit();
-                
-                // delete cache
-                Memcache.delete("mealJournals");
             } else {
                 result = false;
             }

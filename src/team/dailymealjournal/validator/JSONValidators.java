@@ -11,7 +11,7 @@ import org.slim3.controller.validator.Validators;
 import org.slim3.repackaged.org.json.JSONException;
 import org.slim3.repackaged.org.json.JSONObject;
 
-import team.dailymealjournal.util.Util;
+import team.dailymealjournal.util.Utils;
 
 /**
  * Validators that accepts JSONObject instead of a Map or HttpServletRequest.
@@ -34,7 +34,7 @@ public class JSONValidators extends Validators {
      * @param JSONObject parameters - inputs to be validated.
      */
     public JSONValidators(JSONObject parameters) throws NullPointerException, JSONException {
-        super(Util.jsonToMap(parameters));
+        super(Utils.jsonToMap(parameters));
     }
     
     /**

@@ -5,17 +5,23 @@
  * --------------------------------------------------------------------------- */
 package team.dailymealjournal.controller;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.slim3.controller.Controller;
 import org.slim3.controller.Navigation;
 import org.slim3.repackaged.org.json.JSONArray;
+import org.slim3.repackaged.org.json.JSONException;
 import org.slim3.repackaged.org.json.JSONObject;
 
 import team.dailymealjournal.dto.MealDto;
-import team.dailymealjournal.model.Meal;
 import team.dailymealjournal.meta.MealMeta;
+import team.dailymealjournal.model.Meal;
 import team.dailymealjournal.service.MealService;
+import team.dailymealjournal.util.Utils;
 import team.dailymealjournal.validator.JSONValidators;
 
 /**
@@ -29,6 +35,7 @@ import team.dailymealjournal.validator.JSONValidators;
  * [08/31/2015] 0.04 – Kim Agustin – Added validation support.
  * [08/31/2015] 0.05 – Kim Agustin – Restructured controller flow.
  * [09/01/2015] 0.06 – Miguel Victor Remulta – Added documentation.
+ * [09/09/2015] 0.07 - Miguel Victor Remulta - Updated code to handle json data, Massive refactor
  */
 public class MealsController extends Controller {
     
@@ -53,24 +60,19 @@ public class MealsController extends Controller {
 
     @Override
     public Navigation run() throws Exception {
-        String json = "";
         
-        if (isGet()) {
-            json = performGet();
-        } else if (isDelete()) {
-            json = performDelete();
-        } else if (isPost()) {
-            json = performPost();
-        } else if (isPut()) {
-            json = performPut();
+        String requestMethod = this.request.getMethod();
+        
+        if ("post".equalsIgnoreCase(requestMethod)) {
+            performPost();
+        } else if ("put".equalsIgnoreCase(requestMethod)) {
+            performPut();
+        } else if ("delete".equalsIgnoreCase(requestMethod)) {
+            performDelete();
+        } else {
+            performGet();
         }
         
-        if (dto.getErrorList().size() > 0) {
-            // if errors are found, replace whole JSON string to errorList
-            json = new JSONObject().put("errorList", dto.getErrorList()).toString();
-        }
-        response.setContentType("application/json");
-        response.getWriter().write(json);
         return null;
     }
     
@@ -78,130 +80,106 @@ public class MealsController extends Controller {
      * Method to perform if request is GET.
      * @return String - resulting JSON string.
      */
-    private String performGet() {
-        String json = "";
-        JSONValidators validators = new JSONValidators(this.request);
+    private void performGet() throws JSONException, IOException {
+        String id = requestScope("id");
         
-        try {
-            if(null != requestScope("id")) {
-                validators.add("id", validators.longType());
-                if (validators.validate()) {
-                    long id = asLong("id");
-                    JSONObject mealJson = null;
-                    Meal meal = service.getMeal(id);
-                    if (null != meal)
-                        mealJson = new JSONObject(meta.modelToJson(meal));
-                    json = mealJson.toString();
-                } else {
-                    validators.addErrorsTo(dto.getErrorList());
+        if (null != id) {
+            try {
+                long mealId = Long.parseLong(id);
+                Meal meal = service.getMeal(mealId);
+                if (null != meal) {
+                    JSONObject mealJson = new JSONObject(meta.modelToJson(meal));
+                    Utils.writeJsonResponse(response, mealJson);
+                } else { // meal not found
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 }
-            } else {
-                JSONArray jsonArray = null;
-                List<Meal> mealList = service.getMealList();
-                if (null != mealList)
-                    jsonArray = new JSONArray(meta.modelsToJson(mealList));
-                json = jsonArray.toString();
+            } catch (NumberFormatException e) { // wrong data type, bad request
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             }
-        } catch (Exception e) {
-            dto.getErrorList().add("An unexpected error occured!");
+        } else {
+            List<Meal> mealList = service.getMealList();
+            JSONArray mealsArray = new JSONArray(meta.modelsToJson(mealList));
+            Utils.writeJsonResponse(response, mealsArray);
         }
-        
-        return json;
-    }
-    
-    /**
-     * Method to perform if request is DELETE.
-     * @return String - resulting JSON string.
-     */
-    private String performDelete() {
-        String json = "";
-        JSONValidators validators = new JSONValidators(this.request);
-        
-        try {
-            validators.add("mealId", validators.required(), validators.longType());
-            if (validators.validate()) {
-                dto.setMealId(this.asLong("mealId"));
-                dto = service.deleteMeal(dto);
-            }
-        } catch (Exception e) {
-            dto.getErrorList().add("An unexpected error occured!");
-        }
-        
-        validators.addErrorsTo(dto.getErrorList());
-        return json;
     }
     
     /**
      * Method to perform if request is POST.
      * @return String - resulting JSON string.
      */
-    private String performPost() {
-        String json = "";
-        JSONObject mealJson = null;
-        JSONValidators validators = new JSONValidators(this.request);
+    private void performPost() throws JSONException, IOException {
+        JSONObject postData = new JSONObject(request.getReader().readLine());
+        JSONValidators validator = new JSONValidators(postData);
         
-        try {
-            validators.add("data", validators.required("Request must be done with post data."));
-            if (validators.validate()) {
-                mealJson = new JSONObject((String) this.requestScope("data"));
-                
-                validators = new JSONValidators(mealJson);
-                validators.add("name", validators.required());
-                validators.add("unit", validators.required());
-                validators.add("calories", validators.required(), validators.doubleType());
-                validators.add("defaultQuantity", validators.required(), validators.integerType());
-
-                if (validators.validate()) {
-                    dto.setName(mealJson.getString("name"));
-                    dto.setDefaultQuantity(mealJson.getInt("defaultQuantity"));
-                    dto.setCalories(mealJson.getDouble("calories"));
-                    dto.setUnit(mealJson.getString("unit"));
-                    dto = this.service.addMeal(dto);
-                }
-            }
-        } catch (Exception e) {
-            dto.getErrorList().add("An unexpected error occured!");
+        validator.add("name", validator.required());
+        validator.add("unit", validator.required());
+        validator.add("calories", validator.required(), validator.doubleType());
+        validator.add("defaultQuantity", validator.required(), validator.integerType());
+        
+        if (validator.validate()) {
+            dto.setName(postData.getString("name"));
+            dto.setDefaultQuantity(postData.getInt("defaultQuantity"));
+            dto.setCalories(postData.getDouble("calories"));
+            dto.setUnit(postData.getString("unit"));
+            dto = this.service.addMeal(dto);
+        } else {
+            List<String> errorList = new ArrayList<String>();
+            validator.addErrorsTo(errorList);
+            Utils.writeErrors(response, errorList);
         }
+    }
+    
+    /**
+     * Method to perform if request is DELETE.
+     * @return String - resulting JSON string.
+     */
+    private void performDelete() throws IOException {
+        String id = requestScope("id");
         
-        validators.addErrorsTo(dto.getErrorList());
-        return json;
+        if (null != id) {
+            try {
+                long mealId = Long.parseLong(id);
+                Meal meal = service.getMeal(mealId);
+                if (null != meal) {
+                    dto.setMealId(mealId);
+                    dto = service.deleteMeal(dto);
+                } else { // meal not found
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                }
+            } catch (NumberFormatException e) { // wrong data type, bad request
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            }
+        } else { // no id, bad request
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        }
     }
     
     /**
      * Method to perform if request is PUT.
      * @return String - resulting JSON string.
      */
-    private String performPut() {
-        String json = "";
-        JSONObject mealJson = null;
-        JSONValidators validators = new JSONValidators(this.request);
+    private void performPut() throws JSONException, IOException {
+        JSONObject postData = new JSONObject(this.request.getReader().readLine());
+        JSONValidators validator = new JSONValidators(postData);
         
-        try {
-            validators.add("data", validators.required("Request must be done with put data."));
-            if (validators.validate()) {
-                mealJson = new JSONObject((String) this.requestScope("data"));
-                
-                validators = new JSONValidators(mealJson);
-                validators.add("name", validators.required());
-                validators.add("unit", validators.required());
-                validators.add("calories", validators.required(), validators.doubleType());
-                validators.add("defaultQuantity", validators.required(), validators.integerType());
-                validators.add("mealId", validators.required(), validators.longType());
-
-                if (validators.validate()) {
-                    dto.setName(mealJson.getString("name"));
-                    dto.setDefaultQuantity(mealJson.getInt("defaultQuantity"));
-                    dto.setCalories(mealJson.getDouble("calories"));
-                    dto.setUnit(mealJson.getString("unit"));
-                    dto.setMealId(mealJson.getLong("mealId"));
-                    dto = this.service.editMeal(dto);
-                }
-            }
-        } catch (Exception e) {
-            dto.getErrorList().add("An unexpected error occured!");
+        validator.add("name", validator.required());
+        validator.add("unit", validator.required());
+        validator.add("calories", validator.required(), validator.doubleType());
+        validator.add("defaultQuantity", validator.required(), validator.integerType());
+        validator.add("mealId", validator.required(), validator.longType());
+        
+        if (validator.validate()) {
+            dto.setName(postData.getString("name"));
+            dto.setDefaultQuantity(postData.getInt("defaultQuantity"));
+            dto.setCalories(postData.getDouble("calories"));
+            dto.setUnit(postData.getString("unit"));
+            dto.setMealId(postData.getLong("mealId"));
+            dto = this.service.editMeal(dto);
+        } else {
+            List<String> errorList = new ArrayList<String>();
+            validator.addErrorsTo(errorList);
+            Utils.writeErrors(response, errorList);
         }
-        
-        validators.addErrorsTo(dto.getErrorList());
-        return json;
     }
+    
 }

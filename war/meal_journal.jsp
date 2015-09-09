@@ -1,3 +1,4 @@
+<!doctype html>
 <html lang="en" ng-app="MealJournalApp">
 
 <head>
@@ -36,6 +37,7 @@
     <script src="node_modules/angular-aria/angular-aria.min.js"></script>
     <script src="node_modules/angular-messages/angular-messages.min.js"></script>
     <script src="node_modules/angular-material/angular-material.min.js"></script>
+    <script src="app/config.js"></script>
     <script src="app/user-app.js"></script>
 </body>
 

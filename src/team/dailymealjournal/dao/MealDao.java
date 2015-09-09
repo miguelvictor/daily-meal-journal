@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.slim3.datastore.Datastore;
 import org.slim3.datastore.FilterCriterion;
-import org.slim3.memcache.Memcache;
 
 import team.dailymealjournal.meta.MealMeta;
 import team.dailymealjournal.model.Meal;
@@ -23,7 +22,7 @@ import com.google.appengine.api.datastore.Transaction;
 * @version 0.02
 * Version History
 * [07/27/2015] 0.01 – Kim Agustin – Initial codes.
-* [09/06/2015] 0.02 – Kim Agustin – Added memcache support.
+* [09/08/2015] 0.02 – Kim Agustin – Moved key initializations outside transaction.
 */
 public class MealDao {
 
@@ -39,13 +38,9 @@ public class MealDao {
             Key key = Datastore.allocateId("Meal");
             mealModel.setMealId(key.getId());
             
-            // start transaction
             Transaction tx = Datastore.beginTransaction();
             Datastore.put(mealModel);
             tx.commit();
-            
-            // delete cache
-            Memcache.delete("meals");
         } catch (Exception e) {
             result = false;
         }
@@ -56,15 +51,9 @@ public class MealDao {
      * Method used to retrieve list of Meals.
      * @return List<Meal> - list of Meals.
      */
-    @SuppressWarnings("unchecked")
     public List<Meal> getAllMeals() {
-        List<Meal> meals = (List<Meal>) Memcache.get("meals");
-        if (null == meals) {
-            MealMeta meta = new MealMeta();
-            meals = Datastore.query(meta).asList();
-            Memcache.put("meals", meals);
-        }
-        return meals;
+        MealMeta meta = new MealMeta();
+        return Datastore.query(meta).asList();
     }
     
     /**
@@ -96,13 +85,9 @@ public class MealDao {
                 originalMealModel.setCalories(mealModel.getCalories());
                 originalMealModel.setDefaultQuantity(mealModel.getDefaultQuantity());
                 
-                // start transaction
                 Transaction tx = Datastore.beginTransaction();
                 Datastore.put(originalMealModel);
                 tx.commit();
-                
-                // delete cache
-                Memcache.delete("meals");
             } else {
                 result = false;
             }
@@ -125,13 +110,9 @@ public class MealDao {
         try {
             Meal originalMealModel = Datastore.query(meta).filter(mainFilter).asSingle();
             if (originalMealModel != null) {
-                // start transaction
                 Transaction tx = Datastore.beginTransaction();
                 Datastore.delete(originalMealModel.getKey());
                 tx.commit();
-                
-                // delete cache
-                Memcache.delete("meals");
             } else {
                 result = false;
             }
