@@ -114,12 +114,12 @@ public class Utils {
         response.getWriter().write(array.toString());
     }
 
-    public static void writeErrors(HttpServletResponse response, List<String> errorList) throws IOException, JSONException {
+    public static void writeErrors(HttpServletResponse response, List<String> errorList, String title) throws IOException, JSONException {
         JSONObject r = new JSONObject();
         JSONArray errors = listToJson(errorList);
         r.put("errors", errors);
         
-        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Input Validation Error");
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, title);
         response.setContentType("application/json");
         response.getWriter().write(r.toString());
     }

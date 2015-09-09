@@ -57,22 +57,29 @@ var Constants = {
 };
 
 var Strings = {
+	JOURNALS_JOURNAL_ADDED: 'Journal Added!',
+	JOURNALS_JOURNAL_DELETED: 'Journal Deleted!',
+	JOURNALS_JOURNAL_UPDATED: 'Journal Updated!',
 	JOURNALS_CALORIES_GREATER_THAN_200_TITLE: 'Too much calories!',
 	JOURNALS_CALORIES_GREATER_THAN_200_DESCRIPTION: 'Dude, you must control yourself. Calorie count exceeds 2,000 and you are therefore not allowed to eat this thing. Sorry!',
-	JOURNALS_CALORIES_GREATER_THAN_200_OK_LABEL: 'Got it!',
-	JOURNALS_JOURNAL_ADDED: 'Journal Added!',
+	JOURNALS_DELETE_JOURNAL_QUESTION: 'Are you sure you want to delete this meal?',
+	JOURNALS_DELETE_JOURNAL_DESCRIPTION: 'This action cannot be undone.',
+	JOURNALS_DELETE_JOURNAL_CONFIRM: 'Delete',
+	JOURNALS_DELETE_JOURNAL_CANCEL: 'Cancel',
+	JOURNALS_DATA_INVALID_TITLE: 'Oops!',
+	JOURNALS_DATA_INVALID_DESCRIPTION: 'Some data inputted are invalid/missing. You have to fix the errors before adding the meal.',
 
 	ERROR_500_TITLE: 'Internal Server Error',
 	ERROR_500_DESCRIPTION: 'For some reason, there\'s something wrong with the server.',
 
+	MEALS_MEAL_ADDED: 'Meal Added!',
+	MEALS_MEAL_DELETED: 'Meal Deleted!',
+	MEALS_MEAL_UPDATED: 'Meal Updated!',
 	MEALS_ADD_MEAL_TOOLBAR_LABEL: 'Add Meal',
 	MEALS_DELETE_MEAL_QUESTION: 'Are you sure you want to delete this meal?',
 	MEALS_DELETE_MEAL_DESCRIPTION: 'This action cannot be undone.',
 	MEALS_DELETE_MEAL_CONFIRM: 'Delete',
 	MEALS_DELETE_MEAL_CANCEL: 'Cancel',
-	MEALS_MEAL_ADDED: 'Meal Added!',
-	MEALS_MEAL_DELETED: 'Meal Deleted!',
-	MEALS_MEAL_UPDATED: 'Meal Updated!',
 	MEALS_DATA_INVALID_TITLE: 'Oops!',
 	MEALS_DATA_INVALID_DESCRIPTION: 'Some data inputted are invalid/missing. You have to fix the errors before adding the meal.'
 };

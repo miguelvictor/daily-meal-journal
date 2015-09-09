@@ -68,10 +68,9 @@
             };
         }])
         .controller('mealsController', ['$scope', '$http', function ($scope, $http) {
-            $http
-                .get(Urls.Meals)
-                .success(function (response) {
-                    $scope.meals = response;
+            $http.get(Urls.Meals).
+                then(function(response) {
+                   $scope.meals = response.data;
                 });
 
             $scope.openMeal = function (meal) {
@@ -86,14 +85,14 @@
             	$scope.searchEnabled = false;
             };
         }])
-        .controller('mealDetailController', ['$scope', '$http', '$httpParamSerializerJQLike', '$routeParams', '$mdDialog', '$mdToast', function ($scope, $http, $httpParamSerializerJQLike, $routeParams, $mdDialog, $mdToast) {
-            $http
-                .get(Urls.Meals + '?id=' + $routeParams.mealId)
-                .success(function(response) {
-                    var meal = response;
+        .controller('mealDetailController', ['$scope', '$http', '$routeParams', '$mdDialog', '$mdToast', function ($scope, $http, $routeParams, $mdDialog, $mdToast) {
+            var mealDetailId = $routeParams.mealId;
+
+            $http.get(Urls.Meals + '?id=' + mealDetailId).
+                then(function(response) {
+                    var meal = response.data;
 
                     $scope.currentMeal = meal;
-
                     $scope.unit = meal.unit;
                     $scope.calories = meal.calories;
                     $scope.quantity = meal.defaultQuantity;
@@ -109,14 +108,6 @@
                     };
                 });
 
-            $scope.getToastPosition = function () {
-                return Object.keys(Config.ToastPosition)
-                    .filter(function (pos) {
-                        return Config.ToastPosition[pos];
-                    })
-                    .join(' ');
-            };
-
             $scope.backToMeals = function () {
                 Utils.appRedirectTo(Urls.Meals);
             };
@@ -125,75 +116,38 @@
             $scope.addJournal = function (ev) {
                 if ($scope.addMealForm.$valid) {
                     if ($scope.calories > Constants.CalorieLimit) {
-                        $mdDialog.show(
-                            $mdDialog
-                                .alert()
-                                .parent(angular.element(document.body))
-                                .title(Strings.JOURNALS_CALORIES_GREATER_THAN_200_TITLE)
-                                .content(Strings.JOURNALS_CALORIES_GREATER_THAN_200_DESCRIPTION)
-                                .ariaLabel(Strings.JOURNALS_CALORIES_GREATER_THAN_200_TITLE)
-                                .ok(Strings.JOURNALS_CALORIES_GREATER_THAN_200_OK_LABEL)
-                                .targetEvent(ev)
-                        );
+                        Utils.showAlert($mdDialog, ev, Strings.JOURNALS_CALORIES_GREATER_THAN_200_TITLE, Strings.JOURNALS_CALORIES_GREATER_THAN_200_DESCRIPTION);
                     } else {
-                        var journalData =
-                            {
-                                'quantity' : $scope.quantity,
-                                'mealId' : $routeParams.mealId
-                            };
+                        var journalData = {
+                            quantity : $scope.quantity,
+                            mealId : $routeParams.mealId
+                        };
 
-                        $http
-                            .post(Urls.Journals, journalData)
-                            .success(function(data) {
-                                $mdToast.show(
-                                    $mdToast
-                                        .simple()
-                                        .content(Strings.JOURNALS_JOURNAL_ADDED)
-                                        .hideDelay(Config.ToastDelay)
-                                        .position($scope.getToastPosition())
-                                );
+                        $http.post(Urls.Journals, journalData).
+                            then(function(response) {
+                                Utils.showToast($mdToast, Strings.JOURNALS_JOURNAL_ADDED);
                                 Utils.appRedirectTo(Urls.Journals);
-                            })
-                            .error(function() {
-                                var alert = $mdDialog.alert()
-                                    .parent(angular.element(document.body))
-                                    .title(Strings.ERROR_500_TITLE)
-                                    .content(Strings.ERROR_500_DESCRIPTION)
-                                    .ariaLabel(Strings.ERROR_500_TITLE)
-                                    .ok(Strings.ERROR_500_OK_LABEL)
-                                    .targetEvent(ev);
-                                
-                                $mdDialog.show(alert).then(function () {
-                                    // do nothing
-                                });
+                            }, function(response) {
+                                if (response.status >= 400 && response.status < 500) {
+                                    Utils.showAlert($mdDialog, ev, response.statusText, response.data);
+                                } else {
+                                    Utils.showAlert($mdDialog, ev, Strings.ERROR_500_TITLE, Strings.ERROR_500_DESCRIPTION);
+                                }
                             });
                     }
                 } else {
-                    var alert = $mdDialog.alert()
-                        .parent(angular.element(document.body))
-                        .title('Some data inputted are invalid/missing.')
-                        .content('You have to fix the errors before adding this journal.')
-                        .ariaLabel('Adding a meal to a journal')
-                        .ok('Okay, I\'ll fix it.')
-                        .targetEvent(ev);
-
-                    $mdDialog.show(alert).then(function () {
-                        // do nothing
-                    });
+                    Utils.showAlert($mdDialog, ev, Strings.JOURNALS_DATA_INVALID_TITLE, Strings.JOURNALS_DATA_INVALID_DESCRIPTION);
                 }
             };
         }])
         .controller('journalsController', ['$scope', '$http', 'journals', function ($scope, $http, journals) {
-            // getting journals
-
             $scope.journals = [];
             $scope.rawJournals = [];
 
-            $http
-                .get(Urls.Journals)
-                .success(function (response) {
-                    $scope.journals = response;
-                    $scope.rawJournals = journals.ungroup(response);
+            $http.get(Urls.Journals).
+                then(function(response) {
+                    $scope.journals = response.data;
+                    $scope.rawJournals = journals.ungroup(response.data);
                 });
 
             $scope.openJournal = function (journal) {
@@ -213,38 +167,30 @@
             };
         }])
         .controller('journalDetailController', ['$scope', '$http', '$routeParams', '$mdDialog', '$mdToast', function ($scope, $http, $routeParams, $mdDialog, $mdToast) {
-
             var journalId = $routeParams.mealJournalId
 
-            $http
-                .get('/journals?id=' + journalId)
-                .success(function(response) {
-                    $scope.currentJournal = response;
-                    $scope.unit = response.unit;
-                    $scope.calories = response.calories * response.quantity;
-                    $scope.quantity = response.quantity;
+            $http.get(Urls.Journals + '?id=' + journalId).
+                then(function(response) {
+                    var journal = response.data;
+
+                    $scope.currentJournal = journal;
+                    $scope.unit = journal.unit;
+                    $scope.calories = (journal.calories * journal.quantity).toFixed(2);
+                    $scope.quantity = journal.quantity;
 
                     $scope.ui = {
-                        'toolbarLabel': response.name
+                        'toolbarLabel': journal.name
+                    };
+
+                    $scope.updateCalories = function () {
+                        if ($scope.editJournal.quantity.$valid) {
+                            $scope.calories = ($scope.quantity * journal.calories).toFixed(2);
+                        }
                     };
                 });
 
-            $scope.getToastPosition = function () {
-                return Object.keys(Config.ToastPosition)
-                    .filter(function (pos) {
-                        return Config.ToastPosition[pos];
-                    })
-                    .join(' ');
-            };
-
             $scope.backToJournal = function () {
                 Utils.appRedirectTo(Urls.Journals);
-            };
-
-            $scope.updateCalories = function () {
-                if ($scope.editJournal.quantity.$valid) {
-                    $scope.calories = $scope.quantity * journal.calories;
-                }
             };
 
             $scope.deleteJournal = function (ev) {
@@ -252,76 +198,56 @@
                 var confirm = $mdDialog
                                 .confirm()
                                 .parent(angular.element(document.body))
-                                .title('Are you sure you want to delete this journal?')
-                                .content('This action cannot be undone.')
-                                .ariaLabel('Lucky day')
-                                .ok('Delete')
-                                .cancel('Cancel')
+                                .title(Strings.JOURNALS_DELETE_JOURNAL_QUESTION)
+                                .content(Strings.JOURNALS_DELETE_JOURNAL_DESCRIPTION)
+                                .ariaLabel(Strings.JOURNALS_DELETE_JOURNAL_QUESTION)
+                                .ok(Strings.JOURNALS_DELETE_JOURNAL_CONFIRM)
+                                .cancel(Strings.JOURNALS_DELETE_JOURNAL_CANCEL)
                                 .targetEvent(ev);
+
                 $mdDialog.show(confirm).then(function () {
-                    $http
-                        .delete('/journals?id=' + journalId)
-                        .success(function () {
-                            $mdToast.show(
-                                $mdToast
-                                    .simple()
-                                    .content('Journal Deleted!')
-                                    .hideDelay(Config.ToastDelay)
-                                    .position($scope.getToastPosition())
-                            );
+                    $http.delete(Urls.Journals + '?id=' + journalId)
+                        .then(function () {
+                            Utils.showToast($mdToast, Strings.JOURNALS_JOURNAL_DELETED);
+                        }, function(response) {
+                            if (response.status >= 400 && response.status < 500) {
+                                Utils.showAlert($mdDialog, ev, response.statusText, response.data);
+                            } else {
+                                Utils.showAlert($mdDialog, ev, Strings.ERROR_500_TITLE, Strings.ERROR_500_DESCRIPTION);
+                            }
                         });
                     Utils.appRedirectTo(Urls.Journals);
                 }, function () {
-                    // do nothing
+                    // user pressed cancel, do nothing
                 });
             };
 
             $scope.updateJournal = function (ev) {
                 if ($scope.editJournal.$valid) {
-                    if ($scope.calories > 2000) {
-                        $mdDialog.show(
-                            $mdDialog
-                                .alert()
-                                .parent(angular.element(document.body))
-                                .title('Too much calories!')
-                                .content('Dude, you must control yourself. Calorie count exceeds 2,000 and you are therefore not allowed to eat this thing. Sorry!')
-                                .ariaLabel('Too much calories!')
-                                .ok('Got it!')
-                                .targetEvent(ev)
-                        );
+                    if ($scope.calories > Constants.CalorieLimit) {
+                        Utils.showAlert($mdDialog, ev, Strings.JOURNALS_CALORIES_GREATER_THAN_200_TITLE, Strings.JOURNALS_CALORIES_GREATER_THAN_200_DESCRIPTION);
                     } else {
                         $scope.currentJournal.quantity = $scope.quantity;
+                        var data = {
+                            mealId: "" + $scope.currentJournal.mealId,
+                            mealJournalId: "" + $scope.currentJournal.mealJournalId,
+                            quantity: "" + $scope.currentJournal.quantity
+                        };
 
-                        $http
-                            .put(Urls.Journals, {
-                                mealId: $scope.currentJournal.mealId,
-                                quantity: $scope.quantity,
-                                mealJournalId: $scope.currentJournal.mealJournalId
-                            })
-                            .success(function () {
-                                 $mdToast.show(
-                                    $mdToast
-                                        .simple()
-                                        .content('Journal Updated!')
-                                        .hideDelay(1000)
-                                        .position($scope.getToastPosition())
-                                );
+                        $http.put(Urls.Journals, data).
+                            then(function () {
+                                Utils.showToast($mdToast, Strings.JOURNALS_JOURNAL_UPDATED);
+                                Utils.appRedirectTo(Urls.Journals);
+                            }, function(response) {
+                                if (response.status >= 400 && response.status < 500) {
+                                    Utils.showAlert($mdDialog, ev, response.statusText, response.data);
+                                } else {
+                                    Utils.showAlert($mdDialog, ev, Strings.ERROR_500_TITLE, Strings.ERROR_500_DESCRIPTION);
+                                }
                             });
-
-                        Utils.appRedirectTo(Urls.Journals);
                     }
                 } else {
-                    var confirm = $mdDialog.confirm()
-                        .parent(angular.element(document.body))
-                        .title('Some data inputted are invalid/missing.')
-                        .content('You have to fix the errors before updating your journal.')
-                        .ariaLabel('Updating a meal in a journal')
-                        .ok('Okay, I\'ll fix it.')
-                        .targetEvent(ev);
-
-                    $mdDialog.show(confirm).then(function () {
-                        // do nothing
-                    });
+                    Utils.showAlert($mdDialog, ev, Strings.JOURNALS_DATA_INVALID_TITLE, Strings.JOURNALS_DATA_INVALID_DESCRIPTION);
                 }
             };
         }]);

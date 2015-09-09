@@ -39,6 +39,11 @@ import team.dailymealjournal.validator.JSONValidators;
  */
 public class MealsController extends Controller {
     
+    public static final String MEAL_NOT_FOUND = "Meal not found";
+    public static final String MEAL_ID_WRONG_TYPE = "Meal ID must be a whole number";
+    public static final String REQUEST_NOT_JSON = "Request body must be JSON";
+    public static final String MEAL_ID_MISSING = "Meal ID is missing";
+    
     /**
      * The MealService to use.
      * Holds the method for adding a meal.
@@ -60,8 +65,7 @@ public class MealsController extends Controller {
 
     @Override
     public Navigation run() throws Exception {
-        
-        String requestMethod = this.request.getMethod();
+        String requestMethod = request.getMethod();
         
         if ("post".equalsIgnoreCase(requestMethod)) {
             performPost();
@@ -83,7 +87,7 @@ public class MealsController extends Controller {
     private void performGet() throws JSONException, IOException {
         String id = requestScope("id");
         
-        if (null != id) {
+        if (null != id) { // get a single meal
             try {
                 long mealId = Long.parseLong(id);
                 Meal meal = service.getMeal(mealId);
@@ -94,11 +98,11 @@ public class MealsController extends Controller {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
                 }
             } catch (NumberFormatException e) { // wrong data type, bad request
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, MEAL_NOT_FOUND);
             }
-        } else {
-            List<Meal> mealList = service.getMealList();
-            JSONArray mealsArray = new JSONArray(meta.modelsToJson(mealList));
+        } else { // get all meals
+            List<Meal> mealsList = service.getMealList();
+            JSONArray mealsArray = new JSONArray(meta.modelsToJson(mealsList));
             Utils.writeJsonResponse(response, mealsArray);
         }
     }
@@ -107,25 +111,61 @@ public class MealsController extends Controller {
      * Method to perform if request is POST.
      * @return String - resulting JSON string.
      */
-    private void performPost() throws JSONException, IOException {
-        JSONObject postData = new JSONObject(request.getReader().readLine());
-        JSONValidators validator = new JSONValidators(postData);
-        
-        validator.add("name", validator.required());
-        validator.add("unit", validator.required());
-        validator.add("calories", validator.required(), validator.doubleType());
-        validator.add("defaultQuantity", validator.required(), validator.integerType());
-        
-        if (validator.validate()) {
-            dto.setName(postData.getString("name"));
-            dto.setDefaultQuantity(postData.getInt("defaultQuantity"));
-            dto.setCalories(postData.getDouble("calories"));
-            dto.setUnit(postData.getString("unit"));
-            dto = this.service.addMeal(dto);
-        } else {
-            List<String> errorList = new ArrayList<String>();
-            validator.addErrorsTo(errorList);
-            Utils.writeErrors(response, errorList);
+    private void performPost() throws IOException {
+        try {
+            JSONObject postData = new JSONObject(request.getReader().readLine());
+            JSONValidators validator = new JSONValidators(postData);
+            
+            validator.add("name", validator.required());
+            validator.add("unit", validator.required());
+            validator.add("calories", validator.required(), validator.doubleType());
+            validator.add("defaultQuantity", validator.required(), validator.integerType());
+            
+            if (validator.validate()) {
+                dto.setName(postData.getString("name"));
+                dto.setDefaultQuantity(postData.getInt("defaultQuantity"));
+                dto.setCalories(postData.getDouble("calories"));
+                dto.setUnit(postData.getString("unit"));
+                dto = this.service.addMeal(dto);
+            } else {
+                List<String> errorList = new ArrayList<String>();
+                validator.addErrorsTo(errorList);
+                Utils.writeErrors(response, errorList, "Input Validation Error");
+            }
+        } catch (JSONException e) { // we can't understand the request's request body, bad request
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, REQUEST_NOT_JSON);
+        }
+    }
+    
+    /**
+     * Method to perform if request is PUT.
+     * @return String - resulting JSON string.
+     */
+    private void performPut() throws IOException {
+        try {
+            JSONObject postData = new JSONObject(this.request.getReader().readLine());
+            JSONValidators validator = new JSONValidators(postData);
+            
+            validator.add("name", validator.required());
+            validator.add("unit", validator.required());
+            validator.add("calories", validator.required(), validator.doubleType());
+            validator.add("defaultQuantity", validator.required(), validator.integerType());
+            validator.add("mealId", validator.required(), validator.longType());
+            
+            if (validator.validate()) {
+                dto.setName(postData.getString("name"));
+                dto.setDefaultQuantity(postData.getInt("defaultQuantity"));
+                dto.setCalories(postData.getDouble("calories"));
+                dto.setUnit(postData.getString("unit"));
+                dto.setMealId(postData.getLong("mealId"));
+                dto = this.service.editMeal(dto);
+            } else {
+                List<String> errorList = new ArrayList<String>();
+                validator.addErrorsTo(errorList);
+                Utils.writeErrors(response, errorList, "Input Validation Error");
+            }
+        } catch (JSONException e) { // we can't understand the request's request body, bad request
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, REQUEST_NOT_JSON);
         }
     }
     
@@ -144,41 +184,13 @@ public class MealsController extends Controller {
                     dto.setMealId(mealId);
                     dto = service.deleteMeal(dto);
                 } else { // meal not found
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND, MEAL_NOT_FOUND);
                 }
             } catch (NumberFormatException e) { // wrong data type, bad request
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, MEAL_ID_WRONG_TYPE);
             }
         } else { // no id, bad request
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-        }
-    }
-    
-    /**
-     * Method to perform if request is PUT.
-     * @return String - resulting JSON string.
-     */
-    private void performPut() throws JSONException, IOException {
-        JSONObject postData = new JSONObject(this.request.getReader().readLine());
-        JSONValidators validator = new JSONValidators(postData);
-        
-        validator.add("name", validator.required());
-        validator.add("unit", validator.required());
-        validator.add("calories", validator.required(), validator.doubleType());
-        validator.add("defaultQuantity", validator.required(), validator.integerType());
-        validator.add("mealId", validator.required(), validator.longType());
-        
-        if (validator.validate()) {
-            dto.setName(postData.getString("name"));
-            dto.setDefaultQuantity(postData.getInt("defaultQuantity"));
-            dto.setCalories(postData.getDouble("calories"));
-            dto.setUnit(postData.getString("unit"));
-            dto.setMealId(postData.getLong("mealId"));
-            dto = this.service.editMeal(dto);
-        } else {
-            List<String> errorList = new ArrayList<String>();
-            validator.addErrorsTo(errorList);
-            Utils.writeErrors(response, errorList);
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, MEAL_ID_MISSING);
         }
     }
     
