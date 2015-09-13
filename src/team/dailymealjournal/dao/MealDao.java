@@ -10,6 +10,7 @@ import java.util.List;
 import org.slim3.datastore.Datastore;
 import org.slim3.datastore.FilterCriterion;
 
+import team.dailymealjournal.meta.MealJournalMeta;
 import team.dailymealjournal.meta.MealMeta;
 import team.dailymealjournal.model.Meal;
 
@@ -117,15 +118,21 @@ public class MealDao {
     public boolean delete(Meal meal) {
         boolean result = true;
         MealMeta meta = MealMeta.get();
+        MealJournalMeta journalMeta = MealJournalMeta.get();
         FilterCriterion filter = meta.mealId.equal(meal.getMealId());
+        FilterCriterion journalFilter = journalMeta.mealId.equal(meal.getMealId());
 
         try {
-            Meal persistedMeal = Datastore.query(meta).filter(filter).asSingle();
-            
-            if (persistedMeal != null) {
-                Transaction tx = Datastore.beginTransaction();
-                Datastore.delete(persistedMeal.getKey());
-                tx.commit();
+            if (Datastore.query(journalMeta).filter(journalFilter).count() == 0) {
+                Meal persistedMeal = Datastore.query(meta).filter(filter).asSingle();
+                
+                if (persistedMeal != null) {
+                    Transaction tx = Datastore.beginTransaction();
+                    Datastore.delete(persistedMeal.getKey());
+                    tx.commit();
+                } else {
+                    result = false;
+                }
             } else {
                 result = false;
             }

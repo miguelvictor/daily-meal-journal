@@ -14,11 +14,12 @@ import team.dailymealjournal.model.Meal;
 /**
  * Service used to handle meal transactions.
  * @author Kim Agustin
- * @version 0.03
+ * @version 0.04
  * Version History
  * [07/27/2015] 0.01 – Kim Agustin – Initial codes.
  * [08/07/2015] 0.02 – Kim Agustin – Fixed edit service.
  * [08/31/2015] 0.03 – Kim Agustin – Changed message on DAO operation failure.
+ * [09/13/2015] 0.04 – Kim Agustin – Added quick fix for delete if a meal is still listed in any journal.
  */
 public class MealService {
 
@@ -86,7 +87,7 @@ public class MealService {
         meal.setMealId(input.getMealId());
 
         if(!this.dao.delete(meal)) {
-            input.getErrorList().add("An unexpected error occured!");
+            input.getErrorList().add("Some journals still contain this meal.");
         }
 
         return input;
